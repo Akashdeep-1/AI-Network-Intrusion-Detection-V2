@@ -1,0 +1,38 @@
+RANDOM FOREST EVALUATION REPORT
+==================================================
+
+Accuracy:        0.774803
+Macro Precision: 0.700333
+Macro Recall:    0.725135
+Macro F1:        0.693471
+Weighted F1:     0.782946
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      Benign       0.77      0.75      0.76     19954
+  BruteForce       0.36      0.60      0.45      2502
+        DDoS       0.91      0.69      0.78     16814
+         DoS       0.75      0.93      0.83     16486
+       Mirai       1.00      1.00      1.00     19896
+ OtherAttack       0.34      0.64      0.44      4989
+       Recon       0.86      0.50      0.64     14824
+    Spoofing       0.94      0.84      0.89     14188
+   WebAttack       0.37      0.58      0.45      4114
+
+    accuracy                           0.77    113767
+   macro avg       0.70      0.73      0.69    113767
+weighted avg       0.82      0.77      0.78    113767
+
+
+Confusion Matrix (Rows=True, Cols=Pred):
+Classes: ['Benign', 'BruteForce', 'DDoS', 'DoS', 'Mirai', 'OtherAttack', 'Recon', 'Spoofing', 'WebAttack']
+[[14883   985     0     0     0  2409   407   265  1005]
+ [  365  1501     0     0     0   172   119    25   320]
+ [    0     0 11568  5227    15     0     4     0     0]
+ [    0     0  1139 15330    14     0     2     1     0]
+ [    0     0     3    15 19878     0     0     0     0]
+ [  373   298     0     0     0  3204   431    96   587]
+ [ 2316   886     0     0     0  2469  7470   208  1475]
+ [  965   231     0     0     0   319   106 11946   621]
+ [  397   246     0     0     0   845   132   127  2367]]

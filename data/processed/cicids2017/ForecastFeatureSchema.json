@@ -1,0 +1,77 @@
+{
+  "window_choices": [30, 60, 120],
+  "primary_window": 60,
+  "window_unit": "seconds",
+  "window_rationale": "60s primary: ~2400 S(t) vectors over 5 days 8h/day, ~1167 flows/window avg, captures DoS Hulk ramp 30-60s, stable vs 10s noisy/30s alt. See design report table.",
+  "state_vector_S(t)": [
+    "flow_count",
+    "packet_count",
+    "byte_volume",
+    "packets_per_sec",
+    "bytes_per_sec",
+    "avg_packet_size",
+    "flow_duration_mean",
+    "flow_iat_mean",
+    "flow_iat_std",
+    "fwd_packets_mean",
+    "bwd_packets_mean",
+    "syn_rate",
+    "rst_rate",
+    "ack_rate",
+    "fin_rate",
+    "psh_rate",
+    "unique_src_ips",
+    "unique_dst_ips",
+    "unique_dst_ports",
+    "tcp_ratio",
+    "udp_ratio"
+  ],
+  "dimensions": 21,
+  "source_columns": [
+    "Timestamp",
+    "Flow Duration",
+    "Total Fwd Packet",
+    "Total Bwd packets",
+    "Total Length of Fwd Packet",
+    "Total Length of Bwd Packet",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Average Packet Size",
+    "FIN Flag Count",
+    "SYN Flag Count",
+    "RST Flag Count",
+    "PSH Flag Count",
+    "ACK Flag Count",
+    "Protocol",
+    "Src IP dec",
+    "Dst IP dec",
+    "Dst Port",
+    "Src Port"
+  ],
+  "derivation": "GroupBy window on Timestamp; aggregate flows whose Timestamp falls in window. No label-derived fields in input S(t) to prevent leakage.",
+  "label_overlay_for_evaluation_only": {
+    "attack_ratio": "malicious_flows / flow_count (not in input)",
+    "dominant_attack": "most frequent Label per window (not in input)",
+    "note": "attack_ratio/dominant_attack used for target/eval, never as input feature unless experiment explicitly documents supervised state"
+  },
+  "formulations": {
+    "A_state_forecast": "S(t-W+1..t) -> S(t+1..t+k) MSE on 21 dims, then derive attack_prob = f(S_pred)",
+    "B_attack_prob": "S(t-W+1..t) -> P(attack|t+k) CrossEntropy on dominant_attack or Binary malicious"
+  },
+  "compatibility": {
+    "A_directly_compatible": ["Protocol->Protocol", "Flow Packets/s->Rate", "SYN/RST/ACK Flag Count"],
+    "B_transformable": ["Average Packet Size->AVG", "Flow IAT Mean->IAT", "Total Length of Fwd Packet->Tot sum"],
+    "C_dataset_specific": ["Dst Port, Src IP dec, Flow Duration, FWD Init Win Bytes (only in CICIDS)"],
+    "D_unavailable_in_B": ["Header_Length, Time_To_Live (IoT-specific)"]
+  },
+  "scaling": "StandardScaler fitted on TRAIN only, applied to VAL/TEST",
+  "sequence": {
+    "W": 10,
+    "K": 5,
+    "stride": 1,
+    "shapes": "X_seq [N, W=10, 21], y_attack [N, K], S_next [N, K, 21]",
+    "file": "data/processed/cicids2017/sequences_60s.npz"
+  }
+}

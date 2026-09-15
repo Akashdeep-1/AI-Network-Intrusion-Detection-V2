@@ -1,0 +1,38 @@
+XGBOOST EVALUATION REPORT
+==================================================
+
+Accuracy:        0.796048
+Macro Precision: 0.758177
+Macro Recall:    0.682199
+Macro F1:        0.704797
+Weighted F1:     0.790059
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      Benign       0.68      0.88      0.77     19954
+  BruteForce       0.77      0.40      0.52      2502
+        DDoS       0.90      0.70      0.79     16814
+         DoS       0.75      0.92      0.83     16486
+       Mirai       1.00      1.00      1.00     19896
+ OtherAttack       0.51      0.38      0.43      4989
+       Recon       0.68      0.66      0.67     14824
+    Spoofing       0.92      0.86      0.89     14188
+   WebAttack       0.61      0.36      0.45      4114
+
+    accuracy                           0.80    113767
+   macro avg       0.76      0.68      0.70    113767
+weighted avg       0.80      0.80      0.79    113767
+
+
+Confusion Matrix (Rows=True, Cols=Pred):
+Classes: ['Benign', 'BruteForce', 'DDoS', 'DoS', 'Mirai', 'OtherAttack', 'Recon', 'Spoofing', 'WebAttack']
+[[17583    88     0     0     0   502  1256   333   192]
+ [  810   995     0     0     0    62   470    59   106]
+ [    0     0 11765  5029    17     0     3     0     0]
+ [    0     0  1324 15149    12     0     1     0     0]
+ [    0     0     8     9 19878     0     0     1     0]
+ [ 1233    50     0     0     0  1883  1486   141   196]
+ [ 3654    98     0     0     0   804  9714   286   268]
+ [ 1412    31     0     0     0    50   402 12136   157]
+ [ 1040    27     0     0     0   424   947   215  1461]]

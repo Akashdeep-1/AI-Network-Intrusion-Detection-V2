@@ -1,0 +1,46 @@
+XGBOOST RESULTS
+========================================
+
+Accuracy:        0.796048
+Macro Precision: 0.758177
+Macro Recall:    0.682199
+Macro F1:        0.704797
+Weighted F1:     0.790059
+Training Time:   66.4732 sec
+Prediction Time: 1.0309 sec
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      Benign       0.68      0.88      0.77     19954
+  BruteForce       0.77      0.40      0.52      2502
+        DDoS       0.90      0.70      0.79     16814
+         DoS       0.75      0.92      0.83     16486
+       Mirai       1.00      1.00      1.00     19896
+ OtherAttack       0.51      0.38      0.43      4989
+       Recon       0.68      0.66      0.67     14824
+    Spoofing       0.92      0.86      0.89     14188
+   WebAttack       0.61      0.36      0.45      4114
+
+    accuracy                           0.80    113767
+   macro avg       0.76      0.68      0.70    113767
+weighted avg       0.80      0.80      0.79    113767
+
+
+Top 15 Features:
+        Feature  Importance
+        Tot sum    0.142947
+         Number    0.140832
+            AVG    0.093524
+            Min    0.066863
+            TCP    0.051203
+  Protocol Type    0.047595
+          HTTPS    0.044847
+      rst_count    0.041167
+      fin_count    0.034382
+syn_flag_number    0.028210
+ack_flag_number    0.027922
+            Max    0.027166
+            SSH    0.026875
+rst_flag_number    0.026178
+fin_flag_number    0.025289

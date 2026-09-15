@@ -1,0 +1,38 @@
+LOGISTIC REGRESSION EVALUATION REPORT
+==================================================
+
+Accuracy:        0.666002
+Macro Precision: 0.592972
+Macro Recall:    0.597970
+Macro F1:        0.574013
+Weighted F1:     0.676010
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      Benign       0.66      0.52      0.58     19954
+  BruteForce       0.25      0.42      0.32      2502
+        DDoS       0.89      0.63      0.74     16814
+         DoS       0.71      0.92      0.80     16486
+       Mirai       1.00      1.00      1.00     19896
+ OtherAttack       0.27      0.50      0.35      4989
+       Recon       0.85      0.43      0.57     14824
+    Spoofing       0.51      0.58      0.55     14188
+   WebAttack       0.20      0.38      0.26      4114
+
+    accuracy                           0.67    113767
+   macro avg       0.59      0.60      0.57    113767
+weighted avg       0.72      0.67      0.68    113767
+
+
+Confusion Matrix (Rows=True, Cols=Pred):
+Classes: ['Benign', 'BruteForce', 'DDoS', 'DoS', 'Mirai', 'OtherAttack', 'Recon', 'Spoofing', 'WebAttack']
+[[10442  1090     0     0     0  1974   291  4451  1706]
+ [  284  1054     0     0     0   268   116   445   335]
+ [    0     0 10666  6129    14     0     4     0     1]
+ [    0     0  1329 15129    18     0     1     9     0]
+ [    0     0    27    49 19812     0     0     8     0]
+ [  338   358     0     0     0  2474   378   586   855]
+ [ 1738   873     0     0     0  2626  6375  1574  1638]
+ [ 2684   495     0     0     0   710   267  8244  1788]
+ [  454   307     0     1     0   950   106   723  1573]]

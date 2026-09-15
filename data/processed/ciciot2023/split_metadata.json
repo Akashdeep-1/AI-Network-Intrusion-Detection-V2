@@ -1,0 +1,43 @@
+{
+  "initial_rows": 577217,
+  "invalid_numeric_rows_removed": 0,
+  "duplicate_feature_rows_removed": 8383,
+  "final_rows": 568834,
+  "class_distribution": {
+    "Benign": 99768,
+    "Mirai": 99481,
+    "DDoS": 84071,
+    "DoS": 82429,
+    "Recon": 74118,
+    "Spoofing": 70938,
+    "OtherAttack": 24946,
+    "WebAttack": 20572,
+    "BruteForce": 12511
+  },
+  "train_rows": 455067,
+  "val_rows": 0,
+  "test_rows": 113767,
+  "train_test_overlap_count": 0,
+  "train_class_distribution": {
+    "Benign": 79814,
+    "Mirai": 79585,
+    "DDoS": 67257,
+    "DoS": 65943,
+    "Recon": 59294,
+    "Spoofing": 56750,
+    "OtherAttack": 19957,
+    "WebAttack": 16458,
+    "BruteForce": 10009
+  },
+  "test_class_distribution": {
+    "Benign": 19954,
+    "Mirai": 19896,
+    "DDoS": 16814,
+    "DoS": 16486,
+    "Recon": 14824,
+    "Spoofing": 14188,
+    "OtherAttack": 4989,
+    "WebAttack": 4114,
+    "BruteForce": 2502
+  }
+}

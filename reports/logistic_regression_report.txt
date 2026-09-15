@@ -1,0 +1,27 @@
+LOGISTIC REGRESSION RESULTS
+========================================
+
+Accuracy:        0.666002
+Macro Precision: 0.592972
+Macro Recall:    0.597970
+Macro F1:        0.574013
+Weighted F1:     0.676010
+Training Time:   62.6055 sec
+Prediction Time: 0.0215 sec
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      Benign       0.66      0.52      0.58     19954
+  BruteForce       0.25      0.42      0.32      2502
+        DDoS       0.89      0.63      0.74     16814
+         DoS       0.71      0.92      0.80     16486
+       Mirai       1.00      1.00      1.00     19896
+ OtherAttack       0.27      0.50      0.35      4989
+       Recon       0.85      0.43      0.57     14824
+    Spoofing       0.51      0.58      0.55     14188
+   WebAttack       0.20      0.38      0.26      4114
+
+    accuracy                           0.67    113767
+   macro avg       0.59      0.60      0.57    113767
+weighted avg       0.72      0.67      0.68    113767

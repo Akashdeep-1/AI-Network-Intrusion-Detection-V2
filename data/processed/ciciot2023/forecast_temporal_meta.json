@@ -1,0 +1,10 @@
+{
+  "N": 288602,
+  "train": 202021,
+  "val": 43290,
+  "test": 43291,
+  "window": 10,
+  "horizon": 5,
+  "time_ordered": true,
+  "overlap": 0
+}
