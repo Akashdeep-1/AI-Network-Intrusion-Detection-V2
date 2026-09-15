@@ -1,0 +1,73 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments & IDEs
+.venv/
+venv/
+ENV/
+env/
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Agent & Worktree Caches
+.agents/
+.claude/
+.worktrees/
+powershell.cmd
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Large Data & Archives (Recursive)
+*.csv
+*.tsv
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.7z
+*.rar
+
+# Serialized Model Artifacts & Sequence Tensors (Recursive)
+*.joblib
+*.pt
+*.pth
+*.pkl
+*.pickle
+*.h5
+*.onnx
+*.bin
+*.npz
+*.npy
+
+# Model weights directory & backups
+models/*
+backups/*
+
+# Raw Data Directory (ignore large raw files, preserve provenance)
+data/raw/*
+!data/raw/cicids2017/
+data/raw/cicids2017/*
+!data/raw/cicids2017/DATASET_PROVENANCE.json
+
+# Processed Data Directory (ignore large processed datasets, preserve metadata/schemas)
+data/processed/*
+!data/processed/ciciot2023/
+!data/processed/cicids2017/
+data/processed/ciciot2023/*
+data/processed/cicids2017/*
+!data/processed/ciciot2023/selected_features.txt
+!data/processed/ciciot2023/numeric_imputation_stats.json
+!data/processed/ciciot2023/split_metadata.json
+!data/processed/ciciot2023/forecast_temporal_meta.json
+!data/processed/cicids2017/ForecastFeatureSchema.json
+
+# Streamlit Local Cache
+.streamlit/
