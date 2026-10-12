@@ -65,24 +65,24 @@ def _load_forecast_model_and_scaler():
     if not model_path.exists():
         return None, None, None, None
     try:
-            # Verify integrity BEFORE loading (prevents arbitrary code execution from tampered checkpoint)
-            ckpt = load_verified_torch("gru_60s", device="cpu")
-            cfg = ckpt["config"]
-            F = cfg["input_dim"]
-            K = cfg["K"]
-            hidden = cfg["hidden"]
-            mtype = cfg["model_type"]
+        # Verify integrity BEFORE loading (prevents arbitrary code execution from tampered checkpoint)
+        ckpt = load_verified_torch("gru_60s", device="cpu")
+        cfg = ckpt["config"]
+        F = cfg["input_dim"]
+        K = cfg["K"]
+        hidden = cfg["hidden"]
+        mtype = cfg["model_type"]
 
-            from src.forecasting.cicids_model import CICIDSForecaster, GRUForecaster
-            ModelCls = GRUForecaster if mtype == "gru" else CICIDSForecaster
-            model = ModelCls(input_dim=F, hidden_dim=hidden, num_layers=cfg["layers"], horizon=K, dropout=cfg["dropout"], mode=cfg["mode"])
-            model.load_state_dict(ckpt["model_state"])
-            model.eval()
+        from src.forecasting.cicids_model import CICIDSForecaster, GRUForecaster
+        ModelCls = GRUForecaster if mtype == "gru" else CICIDSForecaster
+        model = ModelCls(input_dim=F, hidden_dim=hidden, num_layers=cfg["layers"], horizon=K, dropout=cfg["dropout"], mode=cfg["mode"])
+        model.load_state_dict(ckpt["model_state"])
+        model.eval()
 
-            scaler_mean = np.array(ckpt["scaler_mean"])
-            scaler_scale = np.array(ckpt["scaler_scale"])
-            return model, cfg, scaler_mean, scaler_scale
-        except IntegrityError as e:
+        scaler_mean = np.array(ckpt["scaler_mean"])
+        scaler_scale = np.array(ckpt["scaler_scale"])
+        return model, cfg, scaler_mean, scaler_scale
+    except IntegrityError as e:
         st.error(f"GRU model integrity check failed: {e}")
         st.stop()
     except Exception as e:
