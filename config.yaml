@@ -1,0 +1,130 @@
+# Centralized Configuration for AI Network Intrusion Detection
+# All paths, hyperparameters, and environment-specific settings
+
+project:
+  name: "AI-Network-Intrusion-Detection-V2"
+  version: "0.1.0"
+
+# Directory paths (relative to project root)
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  models: "models"
+  reports: "reports"
+  logs: "logs"
+  config: "config"
+
+# Dataset A: CICIoT2023
+ciciot2023:
+  raw_dir: "ciciot2023/MERGED_CSV"
+  processed_dir: "ciciot2023"
+  selected_features_file: "selected_features.txt"
+  imputation_stats_file: "numeric_imputation_stats.json"
+  split_metadata_file: "split_metadata.json"
+  forecast_temporal_meta_file: "forecast_temporal_meta.json"
+  n_features: 36
+  test_size: 0.2
+  random_state: 42
+  attack_categories: 9
+
+# Dataset B: CICIDS-2017
+cicids2017:
+  raw_dir: "cicids2017"
+  processed_dir: "cicids2017"
+  feature_schema_file: "ForecastFeatureSchema.json"
+  states_file_template: "states_{window_sec}s.csv"
+  scaler_file: "scaler.joblib"
+  window_seconds: 60
+  sequence_length: 10  # W
+  forecast_horizon: 5  # K
+  state_dim: 21
+  train_split: 0.70
+  val_split: 0.15
+  test_split: 0.15
+
+# Model artifacts
+models_config:
+  xgboost: "xgboost_model.joblib"
+  random_forest: "random_forest_model.joblib"
+  logistic_regression: "logistic_regression_model.joblib"
+  gru_60s: "cicids_gru_W10_K5_60s.pt"
+  gru_30s: "cicids_gru_W10_K5_30s.pt"
+  lstm_60s: "cicids_lstm_W10_K5_60s.pt"
+  lstm_30s: "cicids_lstm_W10_K5_30s.pt"
+
+# Model artifact integrity (SHA-256 hashes of trusted artifacts)
+# These must be updated ONLY when artifacts are intentionally replaced via trusted process
+model_integrity:
+  xgboost: "539a5d661eb36863673efdebe0666d74416031850160c56eddb442a3cc4e0984"
+  random_forest: "08ed6ed2104e3c54af181b49fcd622dc66ea967811e4bac74fd8425786f1da2c"
+  logistic_regression: "8fe753b158853f8381db14f70995a4dc005bcb5f66977e8030c844597c30c9f1"
+  gru_60s: "f56c9e09a42002fdce71a237fbe8b4d053ef46b45337b98c2cad0b39dba40f34"
+
+# Training hyperparameters
+training:
+  xgboost:
+    n_estimators: 200
+    max_depth: 8
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+    n_jobs: -1
+  random_forest:
+    n_estimators: 200
+    max_depth: 15
+    min_samples_split: 5
+    min_samples_leaf: 2
+    random_state: 42
+    n_jobs: -1
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    solver: "lbfgs"
+    random_state: 42
+  forecasting:
+    gru:
+      hidden_size: 64
+      num_layers: 2
+      dropout: 0.2
+      learning_rate: 0.001
+      batch_size: 64
+      epochs: 50
+      patience: 10
+    lstm:
+      hidden_size: 64
+      num_layers: 2
+      dropout: 0.2
+      learning_rate: 0.001
+      batch_size: 64
+      epochs: 50
+      patience: 10
+
+# Inference settings
+inference:
+  confidence_threshold: 0.5
+  batch_size: 1024
+  device: "auto"  # auto, cpu, cuda
+
+# Streamlit dashboard
+dashboard:
+  host: "0.0.0.0"
+  port: 8501
+  theme: "dark"
+  max_upload_size_mb: 200
+
+# Logging
+logging:
+  level: "INFO"
+  format: "json"
+  file: "logs/app.log"
+  max_bytes: 10485760
+  backup_count: 5
+
+# CI/CD
+ci:
+  python_version: "3.11"
+  test_timeout_seconds: 300
+  mypy_strict_modules:
+    - "src.forecasting"
+    - "src.inference"

@@ -23,11 +23,17 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
+    from src.config import get_dashboard_config
     from src.data_pipeline import EXPECTED_FEATURE_COLUMNS
     from src.inference import InferenceError, predict_dataframe, validate_feature_frame
+    from src.dataset_router import detect_dataset_format, get_dataset_info, format_dataset_error
+    from src.model_integrity import load_verified_joblib, IntegrityError
 except ImportError:
+    from src.config import get_dashboard_config
     from data_pipeline import EXPECTED_FEATURE_COLUMNS
     from inference import InferenceError, predict_dataframe, validate_feature_frame
+    from dataset_router import detect_dataset_format, get_dataset_info, format_dataset_error
+    from model_integrity import load_verified_joblib, IntegrityError
 
 st.set_page_config(
     page_title="AI Network Intrusion Detection System",
@@ -88,17 +94,20 @@ st.markdown(
 @st.cache_resource
 def load_models() -> Dict[str, Any]:
     models = {}
-    model_paths = {
-        "XGBoost (Recommended)": MODEL_DIR / "xgboost_model.joblib",
-        "Random Forest": MODEL_DIR / "random_forest_model.joblib",
-        "Logistic Regression": MODEL_DIR / "logistic_regression_model.joblib",
+    model_names = ["xgboost", "random_forest", "logistic_regression"]
+    display_names = {
+        "xgboost": "XGBoost (Recommended)",
+        "random_forest": "Random Forest",
+        "logistic_regression": "Logistic Regression",
     }
-    for name, path in model_paths.items():
-        if path.exists():
-            try:
-                models[name] = joblib.load(path)
-            except Exception as e:
-                st.sidebar.error(f"Failed loading {name}: {e}")
+    for name in model_names:
+        try:
+            models[display_names[name]] = load_verified_joblib(name)
+        except IntegrityError as e:
+            st.sidebar.error(f"Integrity check failed for {display_names[name]}: {e}")
+            st.stop()
+        except Exception as e:
+            st.sidebar.error(f"Failed loading {display_names[name]}: {e}")
     return models
 
 
@@ -176,10 +185,15 @@ def main():
     st.subheader("📥 Input Network Traffic")
     col1, col2 = st.columns([2, 1])
 
+    # Get upload limit from config
+    dashboard_cfg = get_dashboard_config()
+    max_upload_mb = dashboard_cfg.max_upload_size_mb
+
     uploaded_file = col1.file_uploader(
-        "Upload Network Traffic CSV (Features required: 36 CICIoT2023 flow features)",
+        "Upload Network Traffic CSV (CICIoT2023 format: 36 features)",
         type=["csv"],
-        help="Upload a CSV containing network flow features for intrusion detection.",
+        max_upload_size=max_upload_mb,
+        help=f"Upload CICIoT2023 flow features (Header_Length, Protocol Type, etc.). CICIDS-2017 data should use Tab 7. Max file size: {max_upload_mb} MB.",
     )
     use_demo = col2.button("Load Demo Traffic Sample", type="secondary", use_container_width=True)
 
@@ -190,9 +204,60 @@ def main():
         try:
             input_df = pd.read_csv(uploaded_file)
             upload_time = time.time() - start
+
+            # Application-level validation (defense in depth)
+            # 1. Verify file size matches config (Streamlit enforces but verify)
+            file_size_mb = uploaded_file.size / (1024 * 1024)
+            if file_size_mb > max_upload_mb:
+                st.error(f"❌ File size ({file_size_mb:.1f} MB) exceeds limit ({max_upload_mb} MB)")
+                return
+
+            # 2. CSV structure validation
+            n_rows, n_cols = input_df.shape
+            if n_rows == 0:
+                st.error("❌ Uploaded CSV contains no data rows")
+                return
+            if n_cols < 2:
+                st.error(f"❌ Uploaded CSV has only {n_cols} column(s), expected at least 2 (features + label)")
+                return
+
+            # 3. Reasonable bounds based on actual dataset sizes
+            # CICIoT2023 test set: ~115K rows; full dataset: ~577K rows
+            # Allow up to 1M rows for legitimate network log analysis
+            MAX_ROWS = 1_000_000
+            if n_rows > MAX_ROWS:
+                st.error(f"❌ Row count ({n_rows:,}) exceeds maximum ({MAX_ROWS:,}). "
+                         f"Consider splitting the file or using batch processing.")
+                return
+
+            # 4. Column count sanity check
+            # CICIoT2023 has 36 features + Label; CICIDS-2017 has ~79 cols
+            # Allow up to 200 columns for flexibility
+            MAX_COLS = 200
+            if n_cols > MAX_COLS:
+                st.error(f"❌ Column count ({n_cols}) exceeds maximum ({MAX_COLS}). "
+                         f"Check for malformed CSV or wrong file format.")
+                return
+
+            # 5. Check for completely empty columns
+            empty_cols = input_df.columns[input_df.isna().all()].tolist()
+            if empty_cols:
+                st.warning(f"⚠️ {len(empty_cols)} completely empty column(s) detected and will be ignored: {empty_cols[:5]}...")
+                input_df = input_df.dropna(axis=1, how='all')
+
             st.success(
-                f"✅ Uploaded CSV loaded successfully ({len(input_df):,} rows) in {upload_time:.2f}s."
+                f"✅ Uploaded CSV loaded successfully ({n_rows:,} rows, {n_cols} columns) "
+                f"in {upload_time:.2f}s. Size: {file_size_mb:.1f} MB."
             )
+        except pd.errors.EmptyDataError:
+            st.error("❌ Uploaded CSV is empty or contains only headers")
+            return
+        except pd.errors.ParserError as e:
+            st.error(f"❌ CSV parse error: {e}")
+            return
+        except MemoryError:
+            st.error("❌ File too large to process in available memory. Split into smaller files.")
+            return
         except Exception as e:
             st.error(f"❌ Error reading CSV file: {e}")
             return
@@ -208,6 +273,20 @@ def main():
             "👆 Upload a network traffic CSV or click **Load Demo Traffic Sample** to run the IDS detector."
         )
         return
+
+    # Dataset Format Detection & Routing
+    dataset_info = get_dataset_info(input_df)
+    detected_format = dataset_info["detected_format"]
+
+    if detected_format == "cicids2017":
+        # CICIDS-2017 detected — route to forecasting tab with clear message
+        st.warning(format_dataset_error(dataset_info))
+        st.info("👉 **Switch to Tab 7 (🔮 Forecast S(t)→S(t+k))** for CICIDS-2017 temporal forecasting analysis.")
+        st.stop()
+    elif detected_format == "unknown":
+        st.error(format_dataset_error(dataset_info))
+        st.stop()
+    # detected_format == "ciciot2023" continues to normal detection pipeline
 
     # Schema Validation
     feature_names = model_artifact.get("feature_names", EXPECTED_FEATURE_COLUMNS)

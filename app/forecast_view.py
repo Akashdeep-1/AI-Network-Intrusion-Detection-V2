@@ -12,6 +12,13 @@ from pathlib import Path
 import json
 import torch
 
+try:
+    from src.config import get_config, get_resolved_paths
+    from src.model_integrity import load_verified_torch, IntegrityError
+except ImportError:
+    from config import get_config, get_resolved_paths
+    from model_integrity import load_verified_torch, IntegrityError
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = PROJECT_ROOT / "reports"
 MODELS_DIR = PROJECT_ROOT / "models"
@@ -52,15 +59,34 @@ def _load_forecast_model_and_scaler():
     """
     Load the trained GRU forecasting model and scaler normalization parameters.
     Cached across user interactions to ensure sub-second inference.
+    Integrity verification happens BEFORE deserialization.
     """
     model_path = MODELS_DIR / "cicids_gru_W10_K5_60s.pt"
     if not model_path.exists():
         return None, None, None, None
     try:
-        from src.forecasting.cicids_rollout import load_model
-        model, cfg, (scaler_mean, scaler_scale) = load_model(model_path, device="cpu")
-        return model, cfg, scaler_mean, scaler_scale
-    except Exception:
+            # Verify integrity BEFORE loading (prevents arbitrary code execution from tampered checkpoint)
+            ckpt = load_verified_torch("gru_60s", device="cpu")
+            cfg = ckpt["config"]
+            F = cfg["input_dim"]
+            K = cfg["K"]
+            hidden = cfg["hidden"]
+            mtype = cfg["model_type"]
+
+            from src.forecasting.cicids_model import CICIDSForecaster, GRUForecaster
+            ModelCls = GRUForecaster if mtype == "gru" else CICIDSForecaster
+            model = ModelCls(input_dim=F, hidden_dim=hidden, num_layers=cfg["layers"], horizon=K, dropout=cfg["dropout"], mode=cfg["mode"])
+            model.load_state_dict(ckpt["model_state"])
+            model.eval()
+
+            scaler_mean = np.array(ckpt["scaler_mean"])
+            scaler_scale = np.array(ckpt["scaler_scale"])
+            return model, cfg, scaler_mean, scaler_scale
+        except IntegrityError as e:
+        st.error(f"GRU model integrity check failed: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Failed loading GRU model: {e}")
         return None, None, None, None
 
 @st.cache_data
@@ -93,6 +119,32 @@ _threat_badge = _threat_level
 
 def render_forecast_tab(results_df: pd.DataFrame | None = None):
     st.markdown("### 🔮 Network State Forecast S(t) → S(t+5) — Hybrid System")
+
+    # Explicit scope banner
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: #e0e0e0;
+        ">
+            <strong>🔬 Research Demonstration — CICIDS-2017 Historical Forecasting</strong><br/>
+            This tab displays an <strong>independent temporal forecasting experiment</strong> using the CICIDS-2017 dataset (5 days, Mon–Fri 2017).
+            <ul style="margin: 8px 0 0 20px; padding: 0;">
+                <li>The <strong>CICIoT2023 upload used by Tabs 1–6 is NOT consumed by this tab</strong>.</li>
+                <li>Forecasting model: GRU (64 hidden, W=10, K=5) trained on 60s windowed state vectors S(t) ∈ ℝ²¹.</li>
+                <li><strong>Persistence baseline (Ŝₜ₊ₖ = Sₜ) outperforms the GRU</strong> in the reported evaluation:
+                    MSE 0.0456 vs 0.713 (Δ = -0.667). This is an honest negative result — the neural forecaster provides no gain over copying the last observed state.</li>
+                <li>All metrics, trajectories, and baselines shown here are precomputed from CICIDS-2017 historical data.</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.caption(
         "**Dataset A — CICIoT2023 (Tabs 1–6):** X(t)→y(t) current-state detection (36 features, 79.6% XGBoost).  \n"
         "**Dataset B — CICIDS-2017 (Tab 7):** S(t-W..t)→S(t+1..t+k) genuine temporal forecasting (21-dim S(t), honest evaluation).  "

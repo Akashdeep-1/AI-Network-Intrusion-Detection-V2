@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            constraints.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -c constraints.txt ruff mypy pytest
+
+      - name: Run unit tests
+        run: |
+          python -m unittest discover tests -v
+
+      - name: Run ruff linting
+        run: |
+          ruff check src/ app/ tests/ --output-format=github
+
+      - name: Run mypy (incremental strict on forecasting + inference)
+        run: |
+          mypy --strict src/forecasting src/inference --show-error-codes --no-error-summary || true
+
+  artifact-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Report repository size
+        run: |
+          git count-objects -vH
+          echo "---"
+          git rev-list --objects --all | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | awk '$1=="blob" {print $3, $4}' | sort -rn | head -20

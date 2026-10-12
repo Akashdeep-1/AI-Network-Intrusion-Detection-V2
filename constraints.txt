@@ -1,0 +1,37 @@
+# Constraints for reproducible builds
+# Matches current .venv environment - pin exact versions for CI/CD
+# Update with: .venv/Scripts/pip freeze > constraints.txt
+
+# Core ML
+numpy==2.5.2
+pandas==3.0.5
+scikit-learn==1.9.0
+scipy==1.18.1
+xgboost==3.4.1
+joblib==1.6.0
+
+# Deep Learning
+torch==2.14.0+cpu
+torchaudio==2.14.0+cpu
+torchvision==0.19.0+cpu
+
+# Web Framework
+streamlit==1.63.0
+
+# Visualization
+plotly==7.0.0
+
+# Configuration
+pyyaml==6.0.1
+pydantic==2.10.1
+pydantic-settings==2.7.1
+
+# Testing
+pytest==8.3.4
+
+# Linting/Type Checking
+ruff==0.8.0
+mypy==1.13.0
+
+# Utilities
+tqdm==4.67.1
